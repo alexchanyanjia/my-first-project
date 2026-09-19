@@ -1,0 +1,1858 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#112620" />
+    <meta
+      name="description"
+      content="乳腺癌临床研究预筛工具：按分型和治疗节点推荐优先研究，明确患者已满足条件与待补检查，最终由医生判断。"
+    />
+    <title>乳腺癌临床研究预筛</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23175846'/%3E%3Cpath d='M32 14v36M14 32h36' stroke='white' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <style>
+:root {
+  color-scheme: light;
+  --ink: #14251f;
+  --muted: #68736e;
+  --line: #dfe5e1;
+  --paper: #f4f2ec;
+  --surface: #fffefa;
+  --green: #175846;
+  --green-deep: #0e3d31;
+  --mint: #dcebe4;
+  --gold: #c7a75e;
+  --peach: #f2d7c8;
+  --rose: #a55454;
+  --shadow: 0 22px 55px rgba(30, 49, 41, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font: inherit; }
+button { color: inherit; }
+
+.ambient {
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  filter: blur(2px);
+  pointer-events: none;
+  opacity: .36;
+  z-index: -1;
+}
+.ambient-one { right: -280px; top: 100px; background: radial-gradient(circle, #d7e6de, transparent 68%); }
+.ambient-two { left: -320px; bottom: -160px; background: radial-gradient(circle, #f1dfd1, transparent 68%); }
+
+.topbar {
+  height: 76px;
+  padding: 0 clamp(22px, 5vw, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(20, 37, 31, .1);
+  background: rgba(244, 242, 236, .82);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brand { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 11px; }
+.brand-mark { width: 36px; height: 36px; display: grid; place-items: center; color: var(--green); }
+.brand-mark svg { width: 100%; }
+.brand > span:last-child { display: flex; flex-direction: column; line-height: 1.05; }
+.brand strong { font-size: 17px; letter-spacing: -.03em; }
+.brand small { margin-top: 5px; font-size: 10px; color: var(--muted); letter-spacing: .11em; }
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.private-badge { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--green); padding: 7px 12px; border: 1px solid #c8d7d0; border-radius: 99px; background: rgba(255,255,255,.46); }
+.private-badge span { width: 6px; height: 6px; background: #45a276; border-radius: 50%; box-shadow: 0 0 0 4px rgba(69,162,118,.12); }
+.icon-button { width: 34px; height: 34px; border: 0; background: transparent; padding: 5px; cursor: pointer; }
+.icon-button svg { fill: none; stroke: currentColor; stroke-width: 1.7; }
+
+.shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+.intro { min-height: 265px; padding: 54px 2px 40px; display: flex; justify-content: space-between; align-items: flex-end; gap: 36px; }
+.eyebrow { margin: 0 0 15px; color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: .22em; }
+h1 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(34px, 3.8vw, 54px); line-height: 1.08; font-weight: 500; letter-spacing: -.04em; }
+h1 span { color: var(--green); font-style: italic; }
+.intro-note { width: 285px; display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 5px; }
+.note-index { color: var(--gold); font-family: Georgia, serif; font-size: 18px; border-right: 1px solid #c7c7bd; }
+.intro-note p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
+
+.workspace { display: grid; grid-template-columns: 230px minmax(0, 1fr) 250px; min-height: 540px; background: var(--surface); border: 1px solid rgba(20,37,31,.09); box-shadow: var(--shadow); }
+.stepper { background: var(--green-deep); color: #fff; padding: 28px 25px; display: flex; flex-direction: column; }
+.stepper-head { display: flex; justify-content: space-between; align-items: center; color: #c7d8d1; font-size: 11px; letter-spacing: .1em; }
+.stepper-head strong { color: #fff; font-size: 11px; }
+#stepNav { margin-top: 34px; display: flex; flex-direction: column; gap: 0; flex: 1; }
+.step-item { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 12px; min-height: 72px; opacity: .48; transition: opacity .25s; }
+.step-item:not(:last-child)::after { content: ""; position: absolute; left: 13px; top: 29px; bottom: 5px; width: 1px; background: rgba(255,255,255,.23); }
+.step-item.done, .step-item.active { opacity: 1; }
+.step-dot { width: 28px; height: 28px; border: 1px solid rgba(255,255,255,.48); border-radius: 50%; display: grid; place-items: center; font-size: 10px; }
+.step-item.active .step-dot { background: var(--gold); color: var(--green-deep); border-color: var(--gold); font-weight: 700; }
+.step-item.done .step-dot { background: rgba(255,255,255,.13); }
+.step-copy { padding-top: 4px; }
+.step-copy strong { display: block; font-size: 14px; font-weight: 600; }
+.step-copy small { display: block; color: #b8cbc3; margin-top: 5px; font-size: 12px; line-height: 1.4; }
+.stepper-foot { display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,.14); padding-top: 18px; }
+.pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #e2b765; }
+.stepper-foot div { display: flex; flex-direction: column; }
+.stepper-foot strong { font-size: 10px; }
+.stepper-foot small { color: #99afa6; font-size: 9px; margin-top: 3px; }
+
+.screening-panel { min-width: 0; display: flex; flex-direction: column; }
+.panel-progress { height: 3px; background: #ebeee9; }
+.panel-progress span { display: block; height: 100%; width: 25%; background: var(--gold); transition: width .35s ease; }
+.question-wrap { padding: 44px 46px 28px; flex: 1; }
+.question-number { display: inline-flex; align-items: center; gap: 7px; color: var(--gold); font-size: 10px; letter-spacing: .15em; font-weight: 700; }
+.question-number::before { content: ""; width: 18px; height: 1px; background: currentColor; }
+.question-wrap h2 { margin: 12px 0 8px; font-family: Georgia, "Songti SC", serif; font-size: clamp(27px, 2.7vw, 36px); font-weight: 500; letter-spacing: -.035em; }
+.question-desc { margin: 0 0 28px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.choice-card { border: 1px solid var(--line); background: #fff; min-height: 79px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; text-align: left; transition: border-color .18s, transform .18s, background .18s; }
+.choice-card:hover { border-color: #9fb6ac; transform: translateY(-1px); }
+.choice-card.selected { border-color: var(--green); background: #f3f8f5; box-shadow: inset 0 0 0 1px var(--green); }
+.choice-control { margin-top: 1px; width: 17px; height: 17px; flex: 0 0 auto; border: 1px solid #aeb8b3; border-radius: 50%; display: grid; place-items: center; }
+.multi .choice-control { border-radius: 4px; }
+.choice-card.selected .choice-control { background: var(--green); border-color: var(--green); }
+.choice-card.selected .choice-control::after { content: ""; width: 5px; height: 8px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px,-1px); }
+.choice-copy strong { display: block; font-size: 14px; font-weight: 600; }
+.choice-copy small { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.pathology-selector { display: grid; gap: 24px; }
+.pathology-group { display: grid; gap: 10px; }
+.pathology-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
+.pathology-group-head strong { font-size: 15px; }
+.pathology-group-head small { color: var(--muted); font-size: 12px; text-align: right; }
+.pathology-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pathology-options.her2-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pathology-options .choice-card { min-height: 72px; padding: 13px 14px; }
+.derived-subtype { border-left: 3px solid var(--green); background: #f3f8f5; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.derived-subtype span { color: var(--muted); font-size: 12px; }
+.derived-subtype strong { color: var(--green); font-size: 15px; text-align: right; }
+.biomarker-matrix { border: 1px solid var(--line); background: #fff; }
+.biomarker-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(280px, 1.55fr); gap: 20px; align-items: center; padding: 17px 18px; }
+.biomarker-row:not(:last-of-type) { border-bottom: 1px solid var(--line); }
+.biomarker-name strong { display: block; font-size: 14px; }
+.biomarker-name small { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.segment-group { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #cdd5d1; }
+.segment { min-height: 40px; padding: 8px 9px; border: 0; background: #fff; color: var(--muted); cursor: pointer; font-size: 12px; line-height: 1.35; }
+.segment:not(:last-child) { border-right: 1px solid #d9dfdc; }
+.segment:hover { background: #f5f8f6; color: var(--ink); }
+.segment.selected { background: var(--green); color: #fff; font-weight: 700; }
+.matrix-note { margin: 0; padding: 13px 18px; border-top: 1px solid var(--line); background: #f7f3e9; color: #765f32; font-size: 12px; line-height: 1.6; }
+.path-note { border: 1px solid #cbd9d2; background: #f2f7f4; padding: 22px; }
+.path-note strong { display: block; font-size: 15px; }
+.path-note p { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.panel-actions { height: 74px; padding: 0 46px; border-top: 1px solid #ebece8; display: flex; align-items: center; gap: 16px; }
+.button { border: 0; padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.button.primary { background: var(--green); color: #fff; }
+.button.primary:hover { background: #104a3a; }
+.button.ghost { background: transparent; padding-left: 0; color: var(--muted); }
+.button.ghost:disabled { opacity: .3; cursor: default; }
+.button.outline { background: transparent; border: 1px solid var(--green); color: var(--green); }
+.button svg { width: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+.autosave { margin-left: auto; color: #8b928e; font-size: 9px; }
+
+.snapshot { padding: 29px 24px; background: #fbfaf6; border-left: 1px solid #e5e6e1; display: flex; flex-direction: column; }
+.snapshot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 23px; }
+.snapshot-head > span { font-size: 10px; font-weight: 700; letter-spacing: .13em; }
+.snapshot-head button { border: 0; background: transparent; color: var(--muted); font-size: 10px; cursor: pointer; padding: 3px; }
+.snapshot-row { padding: 13px 0; border-bottom: 1px solid #e5e5df; }
+.snapshot-row:first-child { border-top: 1px solid #e5e5df; }
+.snapshot-row span { color: var(--muted); font-size: 9px; display: block; margin-bottom: 5px; }
+.snapshot-row strong { display: block; font-size: 12px; line-height: 1.55; font-weight: 600; }
+.snapshot-row .empty { color: #adb2af; font-weight: 400; }
+.demo-button { margin-top: auto; padding: 11px; border: 1px dashed #b8c3bd; background: transparent; color: var(--green); font-size: 10px; cursor: pointer; display: flex; gap: 7px; justify-content: center; align-items: center; }
+.demo-button svg { width: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+
+.results-section { margin: 90px 0 28px; scroll-margin-top: 95px; }
+.results-head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 22px; border-bottom: 1px solid #ccd3cf; }
+.results-head h2 { margin: 0 0 7px; font-family: Georgia, "Songti SC", serif; font-size: 34px; font-weight: 500; }
+.results-head p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: 12px; }
+.result-stats { display: grid; grid-template-columns: repeat(3,1fr); margin: 23px 0; border: 1px solid var(--line); background: rgba(255,255,255,.45); }
+.stat { padding: 17px 20px; display: flex; align-items: baseline; gap: 10px; }
+.stat:not(:last-child) { border-right: 1px solid var(--line); }
+.stat strong { font-family: Georgia, serif; font-size: 26px; font-weight: 500; }
+.stat span { color: var(--muted); font-size: 10px; }
+.stat.candidate strong { color: var(--green); }
+.stat.testing strong { color: #9a7435; }
+.stat.review strong { color: #7b5a5a; }
+.result-filters { display: flex; gap: 8px; margin-bottom: 16px; }
+.path-chip { border: 1px solid #bfcfc7; background: #f7faf8; color: var(--green); padding: 8px 12px; font-size: 11px; font-weight: 600; }
+.path-chip.muted { color: var(--muted); background: transparent; border-style: dashed; font-weight: 400; }
+.filter-chip { border: 1px solid #cdd4d0; background: transparent; padding: 8px 13px; font-size: 10px; cursor: pointer; }
+.filter-chip.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.result-list { display: grid; gap: 12px; }
+.empty-result { padding: 46px 24px; border: 1px dashed #c6ccc8; background: rgba(255,255,255,.35); text-align: center; color: var(--muted); }
+.empty-result strong { display: block; color: var(--ink); font-family: Georgia, serif; font-size: 20px; margin-bottom: 7px; }
+.study-card { background: var(--surface); border: 1px solid var(--line); display: grid; grid-template-columns: 9px minmax(0,1fr); box-shadow: 0 10px 30px rgba(30,49,41,.04); }
+.status-rail.priority { background: #2f8460; }
+.status-rail.testing { background: #d7b36c; }
+.status-rail.review { background: #a78383; }
+.status-rail.conflict { background: #98a09c; }
+.study-body { padding: 22px 24px; }
+.study-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.study-kicker { color: var(--muted); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
+.study-title { margin: 6px 0 4px; font-size: 17px; font-weight: 600; }
+.study-meta { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.status-pill { white-space: nowrap; border-radius: 99px; padding: 8px 12px; font-size: 11px; font-weight: 700; }
+.status-pill.priority { background: #dfeee6; color: #236549; }
+.status-pill.testing { background: #f4ead5; color: #79591e; }
+.status-pill.review { background: #f0e4e4; color: #754b4b; }
+.status-pill.conflict { background: #eceeec; color: #59645f; }
+.study-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+.study-tags span { border: 1px solid #d5dcd8; background: #fafbf9; color: var(--muted); padding: 5px 8px; font-size: 11px; }
+.study-grid { margin-top: 18px; padding-top: 17px; border-top: 1px solid #e7e8e4; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.study-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.study-grid.evidence-grid { grid-template-columns: minmax(0, .9fr) minmax(0, 1.45fr) minmax(0, 1fr); align-items: start; }
+.criteria { padding: 14px; border: 1px solid #e2e6e3; background: #fcfcfa; }
+.criteria.support { border-top: 3px solid #78a88f; }
+.criteria.verification { border-top: 3px solid #d7b36c; background: #fdfaf3; }
+.criteria.doctor { border-top: 3px solid #a78383; }
+.criteria h4 { margin: 0 0 9px; font-size: 12px; letter-spacing: .05em; }
+.criteria ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.criteria li { color: var(--muted); font-size: 12px; line-height: 1.6; display: flex; gap: 7px; }
+.criteria li::before { content: "·"; color: var(--gold); font-weight: 700; }
+.rule-note { margin-top: 14px; padding: 11px 13px; background: #eef3f0; color: #50625a; font-size: 12px; line-height: 1.65; }
+.rule-note strong { color: var(--ink); }
+.rule-note span { color: #7d5b50; }
+
+.study-heading { display: flex; align-items: flex-start; gap: 15px; }
+.recommend-rank { flex: 0 0 auto; padding: 7px 8px; border: 1px solid #b9cbc2; color: var(--green); background: #f2f7f4; font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.evidence-counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+.evidence-counts span { padding: 6px 9px; background: #f5f6f3; color: var(--muted); font-size: 11px; }
+.evidence-counts strong { color: var(--ink); font-size: 13px; }
+.action-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.action-list li { display: grid; grid-template-columns: 28px 1fr; gap: 9px; padding-bottom: 9px; border-bottom: 1px solid #eadfc8; }
+.action-list li::before { content: none; }
+.action-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.action-index { width: 28px; height: 28px; display: grid; place-items: center; background: #ead7ac; color: #614819; font-size: 10px; font-weight: 700; }
+.action-list small { display: block; color: #947031; font-size: 9px; letter-spacing: .08em; }
+.action-list strong { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; }
+.action-list p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.action-empty { color: var(--muted); font-size: 12px; line-height: 1.65; }
+.conflict-note { margin-top: 13px; padding: 10px 12px; background: #f4eeee; color: #785b5b; font-size: 11px; line-height: 1.6; }
+.study-card.compact .study-body { padding: 17px 20px; }
+.study-card.compact .study-title { font-size: 15px; }
+.study-card.compact .status-pill { font-size: 10px; }
+.other-candidates { margin-top: 18px; border: 1px solid #cdd5d1; background: rgba(255,255,255,.38); }
+.other-candidates summary { cursor: pointer; padding: 17px 20px; display: grid; grid-template-columns: 1fr auto; gap: 4px 18px; align-items: center; list-style: none; }
+.other-candidates summary::-webkit-details-marker { display: none; }
+.other-candidates summary span { font-size: 14px; font-weight: 700; }
+.other-candidates summary strong { color: var(--green); font-family: Georgia, serif; font-size: 20px; font-weight: 500; }
+.other-candidates summary small { grid-column: 1 / -1; color: var(--muted); font-size: 10px; }
+.other-candidates[open] summary { border-bottom: 1px solid var(--line); }
+.other-list { padding: 12px; display: grid; gap: 10px; }
+.path-empty { min-height: 150px; display: grid; place-content: center; }
+
+.data-note { margin: 18px 0 85px; padding: 20px 22px; border: 1px solid #ccd7d1; background: rgba(221,235,228,.55); display: grid; grid-template-columns: 36px 1fr auto; gap: 15px; align-items: center; }
+.data-note-icon { width: 34px; height: 34px; background: var(--green); color: #fff; display: grid; place-items: center; }
+.data-note-icon svg { width: 19px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.data-note strong { font-size: 12px; }
+.data-note p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.schema-tag { font-family: monospace; color: var(--green); font-size: 9px; padding: 5px 8px; border: 1px solid #aebfb7; }
+
+footer { min-height: 65px; padding: 0 clamp(22px, 5vw, 72px); background: var(--ink); color: #9fb0a9; display: flex; justify-content: space-between; align-items: center; font-size: 9px; letter-spacing: .05em; }
+
+dialog { width: min(480px, calc(100% - 32px)); border: 0; padding: 28px; background: var(--surface); box-shadow: 0 30px 90px rgba(9,25,19,.3); color: var(--ink); }
+dialog::backdrop { background: rgba(10,25,20,.55); backdrop-filter: blur(5px); }
+.dialog-head { display: flex; justify-content: space-between; gap: 18px; }
+.dialog-head div { display: flex; flex-direction: column; gap: 7px; }
+.dialog-head span { color: var(--green); font-size: 9px; letter-spacing: .14em; }
+.dialog-head strong { font-family: Georgia, serif; font-size: 22px; font-weight: 500; }
+.dialog-head button { border: 0; background: transparent; font-size: 25px; cursor: pointer; color: var(--muted); }
+dialog > p, dialog li { color: var(--muted); font-size: 11px; line-height: 1.7; }
+dialog ul { padding-left: 18px; }
+.button.full { width: 100%; margin-top: 8px; }
+
+@media (max-width: 980px) {
+  .workspace { grid-template-columns: 190px minmax(0,1fr); }
+  .snapshot { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 160px; gap: 16px; }
+  .snapshot-head { grid-column: 1 / -1; margin-bottom: 0; }
+  #snapshotContent { display: grid; grid-template-columns: repeat(5, 1fr); }
+  .snapshot-row { border-top: 1px solid #e5e5df; border-bottom: 0; padding: 12px; }
+  .snapshot-row:not(:last-child) { border-right: 1px solid #e5e5df; }
+  .demo-button { margin-top: 0; align-self: center; }
+  .study-grid.three, .study-grid.evidence-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .topbar { height: 66px; padding: 0 18px; }
+  .private-badge { font-size: 0; width: 34px; height: 34px; padding: 0; justify-content: center; }
+  .shell { width: min(580px, calc(100% - 24px)); }
+  .intro { min-height: auto; padding: 42px 2px 30px; display: block; }
+  .intro-note { width: auto; margin-top: 25px; }
+  .workspace { display: block; }
+  .stepper { padding: 18px; }
+  #stepNav { margin-top: 18px; flex-direction: row; }
+  .step-item { min-height: auto; grid-template-columns: 25px 1fr; flex: 1; gap: 6px; }
+  .step-item:not(:last-child)::after { display: none; }
+  .step-dot { width: 25px; height: 25px; }
+  .step-copy strong { display: none; }
+  .step-copy small { display: none; }
+  .stepper-foot { display: none; }
+  .question-wrap { padding: 32px 22px 22px; min-height: 430px; }
+  .choice-grid { grid-template-columns: 1fr; }
+  .pathology-options, .pathology-options.her2-options { grid-template-columns: 1fr; }
+  .pathology-group-head, .derived-subtype { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .pathology-group-head small, .derived-subtype strong { text-align: left; }
+  .biomarker-row { grid-template-columns: 1fr; gap: 11px; padding: 16px; }
+  .segment { min-height: 46px; padding: 8px 5px; font-size: 11px; }
+  .panel-actions { height: auto; min-height: 70px; padding: 12px 22px; }
+  .autosave { display: none; }
+  .button.primary { margin-left: auto; }
+  .snapshot { display: block; padding: 22px; }
+  #snapshotContent { grid-template-columns: 1fr 1fr; margin-bottom: 16px; }
+  .snapshot-row:nth-child(2) { border-right: 0; }
+  .demo-button { width: 100%; }
+  .results-section { margin-top: 60px; }
+  .results-head { align-items: flex-start; gap: 20px; }
+  .results-head { flex-direction: column; }
+  .result-filters { flex-wrap: wrap; }
+  .result-stats { grid-template-columns: 1fr; }
+  .stat:not(:last-child) { border-right: 0; border-bottom: 1px solid var(--line); }
+  .study-grid { grid-template-columns: 1fr; }
+  .study-top { display: block; }
+  .study-top .status-pill { display: inline-flex; margin-top: 12px; }
+  .study-heading { display: block; }
+  .recommend-rank { display: inline-flex; margin-bottom: 10px; }
+  .data-note { grid-template-columns: 36px 1fr; }
+  .schema-tag { grid-column: 2; width: max-content; }
+  footer { padding: 20px; gap: 10px; flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="返回预筛首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M16 4c3.1 4.9 7.2 6.3 11 7-1.1 8.6-4.8 13.7-11 17C9.8 24.7 6.1 19.6 5 11c3.8-.7 7.9-2.1 11-7Z" fill="currentColor" opacity=".18"/>
+            <path d="M10 16h12M16 10v12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>
+          <strong>BreastTrial</strong>
+          <small>临床研究预筛</small>
+        </span>
+      </a>
+      <div class="top-actions">
+        <span class="private-badge"><span></span>本院研究库 · 12 项在招</span>
+        <button class="icon-button" id="helpButton" type="button" aria-label="使用说明">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 0 1 4.6 1c0 1.8-2.3 2.1-2.3 3.6M12 17h.01"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="intro" aria-labelledby="pageTitle">
+        <div>
+          <p class="eyebrow">ADAPTIVE PATHWAY · EVIDENCE-BASED PRE-SCREENING</p>
+          <h1 id="pageTitle">先走对诊疗路径，<br /><span>再看最值得讨论的研究。</span></h1>
+        </div>
+        <div class="intro-note">
+          <span class="note-index">01</span>
+          <p>首页只显示最相关的1-3项研究，并分别说明：患者已满足什么、还缺哪些检查、哪些只能由医生确认。</p>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="患者预筛工作区">
+        <aside class="stepper" aria-label="筛选步骤">
+          <div class="stepper-head">
+            <span>筛选路径</span>
+            <strong id="stepFraction">1 / 5</strong>
+          </div>
+          <nav id="stepNav"></nav>
+          <div class="stepper-foot">
+            <span class="pulse-dot"></span>
+            <div><strong>路径状态</strong><small>按分型动态提问</small></div>
+          </div>
+        </aside>
+
+        <section class="screening-panel">
+          <div class="panel-progress"><span id="progressBar"></span></div>
+          <div class="question-wrap" id="questionWrap" aria-live="polite"></div>
+          <div class="panel-actions">
+            <button class="button ghost" id="backButton" type="button">上一步</button>
+            <span class="autosave">选择仅保存在当前浏览器</span>
+            <button class="button primary" id="nextButton" type="button">
+              <span>继续</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <aside class="snapshot" aria-label="患者画像摘要">
+          <div class="snapshot-head">
+            <span>患者画像</span>
+            <button id="resetButton" type="button">重置</button>
+          </div>
+          <div id="snapshotContent"></div>
+          <button class="demo-button" id="demoButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4-8 9h6l-2 7 8-10h-6l2-6Z"/></svg>
+            载入测试患者
+          </button>
+        </aside>
+      </section>
+
+      <section class="results-section" id="resultsSection" aria-labelledby="resultsTitle">
+        <div class="results-head">
+          <div>
+            <p class="eyebrow">PRIORITIZED RECOMMENDATIONS</p>
+            <h2 id="resultsTitle">优先研究建议</h2>
+            <p id="resultSummary">完成上方分型路径后，首页只显示最相关的1-3项研究，并逐项列出缺失检查。</p>
+          </div>
+          <button class="button outline" id="editButton" type="button">修改患者条件</button>
+        </div>
+        <div class="result-stats" id="resultStats"></div>
+        <div class="result-filters" id="resultFilters"></div>
+        <div class="result-list" id="resultList"></div>
+        <div id="otherCandidates"></div>
+      </section>
+
+      <section class="data-note" aria-label="研究数据说明">
+        <div class="data-note-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2Zm0 0v6c0 1.1 3.6 2 8 2s8-.9 8-2V6M4 12v6c0 1.1 3.6 2 8 2s8-.9 8-2v-6"/></svg>
+        </div>
+        <div>
+          <strong>12 项本院在招研究已接入，但不会在首页一次铺开</strong>
+          <p>先按分型、治疗节点与既往用药缩小范围；未检测或当前未检出的标志物，如有方案检测路径仍可进入优先候选。</p>
+        </div>
+        <span class="schema-tag">schema v3.1</span>
+      </section>
+    </main>
+
+    <footer>
+      <span>BreastTrial Preview · Internal use only</span>
+      <span>最后更新：2026-09-19</span>
+    </footer>
+
+    <dialog id="helpDialog">
+      <div class="dialog-head">
+        <div><span>使用说明</span><strong>临床研究预筛，不是入组结论</strong></div>
+        <button id="closeHelp" type="button" aria-label="关闭">×</button>
+      </div>
+      <p>先分别选择HR状态和HER2原始检测结果，系统自动推导治疗分型；后续问题会切换为相应的临床节点、既往治疗和按需检测。</p>
+      <ul>
+        <li>HER2低表达仅包括IHC 1+和IHC 2+/ISH−；IHC 2+/ISH+及IHC 3+按HER2阳性分流。</li>
+        <li>HER2低表达不是独立于HR状态的主分型；HER2阴性结果会结合HR状态进入HR+/HER2−或TNBC路径。</li>
+        <li>每项研究会分别显示患者已有依据、待补检测/资料及医生确认项。</li>
+        <li>PIK3CA不会作为所有患者的固定问题，只在HR+/HER2−且当前治疗节点相关时出现。</li>
+        <li>标志物未检测或当前未检出时，只要研究存在方案检测/中心复核路径，仍可保留为候选。</li>
+        <li>“优先推荐”不代表可以入组，最终判断只由医生和研究团队完成。</li>
+        <li>本 MVP 不采集姓名、住院号、电话等身份信息。</li>
+      </ul>
+      <button class="button primary full" id="ackHelp" type="button">我知道了</button>
+    </dialog>
+    <!-- 单文件离线Demo：样式、研究数据与筛选逻辑均已内置 -->
+    <script>
+// 研究数据结构 v3.1
+// 所有在招研究均进入候选清单；规则只负责排序、提示检测缺口和暴露风险，
+// 不在网页端作最终入组判定。
+
+const operationalDefaults = {
+  recruitmentStatus: "recruiting",
+  siteScope: "本院",
+  protocolVersionCurrent: true,
+  quotaTracking: false
+};
+
+const screeningCheckCatalog = {
+  pathology: {
+    key: "pathology",
+    label: "病理与分型材料",
+    detail: "准备最新病理报告、代表性切片/蜡块；最终以方案要求的当地或中心复核为准。"
+  },
+  imaging: {
+    key: "imaging",
+    label: "基线肿瘤影像",
+    detail: "准备可用于分期和靶病灶评估的近期影像，具体时间窗由研究团队核对。"
+  },
+  labs: {
+    key: "labs",
+    label: "血液与器官功能检查",
+    detail: "血常规、肝肾功能、电解质、凝血及方案规定项目；需核对检查时效和阈值。"
+  },
+  ecg: {
+    key: "ecg",
+    label: "12 导联心电图 / QTc",
+    detail: "按方案要求完成基线 ECG；部分研究需要连续多次测量。"
+  },
+  echo: {
+    key: "echo",
+    label: "心脏超声或 MUGA / LVEF",
+    detail: "补充基线左室射血分数；多项方案以 LVEF 50% 为关键安全阈值。"
+  },
+  pulmonary: {
+    key: "pulmonary",
+    label: "肺部安全性评估",
+    detail: "核对 ILD/肺炎及慢性肺病史、胸部影像和静息 SpO2。"
+  },
+  pft: {
+    key: "pft",
+    label: "肺功能 PFT / DLCO（有指征时）",
+    detail: "存在既往重度、临床显著或疑似肺部疾病时，按具体方案及研究团队要求补肺活量、FEV1/FVC，必要时完成 DLCO。"
+  },
+  glucose: {
+    key: "glucose",
+    label: "空腹血糖与 HbA1c",
+    detail: "PI3K 通路研究需重点评估糖代谢，最终阈值和用药风险由研究团队确认。"
+  }
+};
+
+const screeningChecks = (...keys) => keys.map((key) => screeningCheckCatalog[key]);
+
+const studies = [
+  {
+    ...operationalDefaults,
+    id: "S01",
+    protocolId: "SPR1020-S-001",
+    shortTitle: "SPR1020",
+    title: "SPR1020 选择性 PARP1 抑制剂 I/II 期研究",
+    phase: "I/II期",
+    clinicalPosition: "标准治疗后；I期剂量递增及 BRCA/HRD 分队列",
+    subtypes: ["hr_pos_her2_neg", "tnbc", "her2_pos"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["post_standard", "later_line", "unknown"],
+    biomarkers: [
+      {
+        key: "brcaHrd",
+        label: "BRCA/HRD",
+        expected: ["positive"],
+        screeningPath: true,
+        cohortSpecific: true,
+        note: "I期剂量递增不强制 BRCA/HRD；乳腺癌回填和II期相应队列需要方案指定检测。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: [],
+      prohibited: ["selective_parp1"],
+      timing: ["II期乳腺癌队列至少需晚期化疗；HR+还需内分泌经治", "泛 PARPi 最多1线", "II期最低线数存在方案文字冲突"]
+    },
+    highlights: ["I期递增覆盖面较宽，BRCA/HRD 不是统一前置门槛", "部分乳腺癌队列允许既往泛 PARP 抑制剂0-1线"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "pulmonary", "pft"),
+    doctorReview: ["具体进入 I期递增、回填或II期哪一队列", "标准治疗失败/不耐受及方案内部线数冲突"],
+    evidencePages: "PDF p48-53"
+  },
+  {
+    ...operationalDefaults,
+    id: "S02",
+    protocolId: "BGB-43395-302",
+    shortTitle: "BGB-43395 + 来曲唑",
+    title: "BGB-43395 联合来曲唑 III 期研究",
+    phase: "III期",
+    clinicalPosition: "HR+/HER2- 晚期阶段系统治疗未治",
+    subtypes: ["hr_pos_her2_neg"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["advanced_untreated", "unknown"],
+    biomarkers: [],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: [],
+      prohibited: ["advanced_endocrine", "advanced_cdk46", "advanced_chemo", "advanced_anti_her2"],
+      timing: ["辅助内分泌±CDK4/6结束后须>12个月复发", "当前疾病阶段短期 NSAI 单药≤2周为方案例外"]
+    },
+    highlights: ["不要求特定驱动基因", "允许符合时间窗的辅助内分泌±CDK4/6史"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "pulmonary"),
+    doctorReview: ["内脏危象或是否需立即细胞毒治疗", "既往治疗是否属于晚期阶段"],
+    evidencePages: "PDF p60-62"
+  },
+  {
+    ...operationalDefaults,
+    id: "S03",
+    protocolId: "2025-251-GLOB1",
+    shortTitle: "HMPL-A251",
+    title: "HMPL-A251 HER2 ADC I/IIa 期研究",
+    phase: "I/IIa期",
+    clinicalPosition: "HER2阳性或HER2低表达，经标准治疗后的早期临床开发队列",
+    subtypes: ["her2_pos", "hr_pos_her2_neg", "tnbc"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["post_standard", "later_line", "unknown"],
+    biomarkers: [
+      {
+        key: "her2Expression",
+        label: "HER2 低表达",
+        expected: ["ihc1", "ihc2_ish_neg"],
+        screeningPath: true,
+        appliesToSubtypes: ["hr_pos_her2_neg", "tnbc"],
+        note: "HER2阳性队列无需本项；HER2阴性患者需由研究团队按IHC/ISH结果确认是否进入HER2低表达队列。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: ["advanced_anti_her2", "advanced_chemo"],
+      requiredAll: [],
+      prohibited: [],
+      timing: ["Part B 乳腺癌队列既往系统治疗≤4线", "HER2+ 队列既往治疗需包括抗HER2", "PI3K/AKT抑制剂治疗后进展者排除"]
+    },
+    highlights: ["Part B分别包含HER2阳性和HER2低表达乳腺癌队列", "既往HER2 ADC并非统一排除"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "pulmonary", "pft"),
+    doctorReview: ["≤4线是否只统计晚期阶段", "属于Part A还是Part B具体队列"],
+    evidencePages: "PDF p41、p48、p51-54"
+  },
+  {
+    ...operationalDefaults,
+    id: "S04",
+    protocolId: "OEBC3",
+    shortTitle: "Elacestrant",
+    title: "Elacestrant III 期桥接研究",
+    phase: "III期",
+    clinicalPosition: "ESR1突变，晚期内分泌1-2线后且仍适合内分泌单药",
+    subtypes: ["hr_pos_her2_neg"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["post_endocrine", "later_line", "unknown"],
+    biomarkers: [
+      {
+        key: "esr1",
+        label: "ESR1",
+        expected: ["positive"],
+        screeningPath: true,
+        note: "方案要求中心实验室 ctDNA 确认；当前未检测或当地结果未检出时仍保留检测/复核候选。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: ["advanced_endocrine", "advanced_cdk46"],
+      prohibited: ["novel_serd"],
+      timing: ["每条内分泌线需在治疗中或结束后28天内进展", "晚期化疗0-1线，ADC按化疗线计算"]
+    },
+    highlights: ["必须有晚期CDK4/6+AI或氟维司群后进展", "辅助治疗是否计线按方案12个月规则计算"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg"),
+    doctorReview: ["是否仍适合内分泌单药", "绝经状态、内脏症状及对照治疗适宜性"],
+    evidencePages: "PDF p64-68"
+  },
+  {
+    ...operationalDefaults,
+    id: "S05",
+    protocolId: "HRS-4508-202-BC",
+    shortTitle: "HRS-4508 联合方案",
+    title: "HRS-4508 HER2阳性乳腺癌 Ib/II 期研究",
+    phase: "Ib/II期",
+    clinicalPosition: "HER2阳性：晚期一线未治、诱导后维持或抗HER2经治",
+    subtypes: ["her2_pos"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["advanced_untreated", "post_induction_maintenance", "anti_her2_pretreated", "later_line", "unknown"],
+    biomarkers: [],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: [],
+      prohibited: [],
+      timing: ["队列Q/4允许晚期≤1线内分泌，但不允许其他晚期系统治疗", "队列1/H需规定诱导后无进展", "队列2/3需晚期抗HER2经治"]
+    },
+    highlights: ["乳腺癌必须为HER2阳性", "一个研究包含一线未治、诱导后维持和经治三个不同场景"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "pulmonary"),
+    doctorReview: ["当前应进入哪个Part/队列", "是否仍可根治、诱导周期及肺炎史例外"],
+    evidencePages: "PDF p26-31"
+  },
+  {
+    ...operationalDefaults,
+    id: "S06",
+    protocolId: "HRS-8080-303",
+    shortTitle: "HRS-8080",
+    title: "HRS-8080 ESR1突变乳腺癌 III 期研究",
+    phase: "III期",
+    clinicalPosition: "ESR1突变，既往1-2线内分泌且最近线最初6个月无PD",
+    subtypes: ["hr_pos_her2_neg"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["post_endocrine", "later_line", "unknown"],
+    biomarkers: [
+      {
+        key: "esr1",
+        label: "ESR1",
+        expected: ["positive"],
+        screeningPath: true,
+        note: "方案要求中心 ctDNA 确认；未检测或当前未检出均先保留为检测/复核候选。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: ["advanced_endocrine", "adjuvant_endocrine"],
+      requiredAll: [],
+      prohibited: ["novel_serd", "pi3k_akt_mtor", "trop2_topo1"],
+      timing: ["最近一线内分泌最初6个月内不得PD", "辅助内分泌前2年不得复发", "晚期化疗≤1线条款存在方案文字张力"]
+    },
+    highlights: ["CDK4/6既往暴露可有可无", "既往氟维司群允许并用于分层"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo"),
+    doctorReview: ["是否仍适合内分泌治疗", "化疗允许条款与排除文字冲突需研究团队确认"],
+    evidencePages: "PDF p42-46"
+  },
+  {
+    ...operationalDefaults,
+    id: "S07",
+    protocolId: "WO45654 / INAVO123",
+    shortTitle: "INAVO123",
+    title: "Inavolisib 联合哌柏西利和来曲唑 III 期研究",
+    phase: "III期",
+    clinicalPosition: "PIK3CA突变、严格内分泌敏感的晚期一线",
+    subtypes: ["hr_pos_her2_neg"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["advanced_untreated", "unknown"],
+    biomarkers: [
+      {
+        key: "pik3ca",
+        label: "PIK3CA",
+        expected: ["positive"],
+        screeningPath: true,
+        note: "方案需要合格 PIK3CA 突变。未检测或当前未检出时仍推荐咨询研究团队，按研究检测路径确认。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: [],
+      prohibited: ["advanced_endocrine", "advanced_cdk46", "advanced_chemo", "advanced_anti_her2"],
+      timing: ["复发患者需至少2年辅助内分泌", "辅助内分泌中无PD且完成后无病≥1年", "辅助CDK4/6结束后1年内不得进展"]
+    },
+    highlights: ["首诊晚期患者无需既往药物", "复发患者需符合严格内分泌敏感定义"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "glucose", "pulmonary"),
+    doctorReview: ["当前是否更适合细胞毒化疗或存在内脏危象", "PIK3CA检测样本和结果是否符合研究要求"],
+    evidencePages: "PDF p44、p47-48"
+  },
+  {
+    ...operationalDefaults,
+    id: "S08",
+    protocolId: "JS105-004-III-BC",
+    shortTitle: "JS105 联合达尔西利和氟维司群",
+    title: "JS105 联合方案 III 期研究",
+    phase: "III期",
+    clinicalPosition: "PIK3CA突变、辅助内分泌早复发或晚期1线内分泌单药后进展",
+    subtypes: ["hr_pos_her2_neg"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["adjuvant_early_recurrence", "post_endocrine", "unknown"],
+    biomarkers: [
+      {
+        key: "pik3ca",
+        label: "PIK3CA",
+        expected: ["positive"],
+        screeningPath: true,
+        note: "方案采用中心 NGS；无合格组织时血液路径需与申办方沟通。当前未检出也保留为复核候选。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: ["advanced_endocrine", "adjuvant_endocrine"],
+      requiredAll: [],
+      prohibited: ["advanced_cdk46", "fulvestrant", "pi3k_akt_mtor"],
+      timing: ["辅助内分泌中或结束后≤12个月复发，或晚期1线内分泌单药后进展", "辅助CDK4/6末次至复发须≥12个月", "晚期化疗0-1线"]
+    },
+    highlights: ["晚期CDK4/6经治是硬限制", "研究有三条不同进入路径，不能只标为晚期二线"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "glucose", "pulmonary", "pft"),
+    doctorReview: ["组织或血液的PIK3CA确认路径", "既往毒性及申办方确认项"],
+    evidencePages: "PDF p42-46"
+  },
+  {
+    ...operationalDefaults,
+    id: "S09",
+    protocolId: "SKB264-III-13",
+    shortTitle: "SKB264 / sac-TMT",
+    title: "SKB264 对比研究者选择化疗 III 期研究",
+    phase: "III期",
+    clinicalPosition: "HR+/HER2- 内分泌后，进入晚期一线化疗窗口",
+    subtypes: ["hr_pos_her2_neg"],
+    stages: ["locally_advanced", "metastatic", "recurrent"],
+    settings: ["first_advanced_chemo", "post_endocrine", "unknown"],
+    biomarkers: [],
+    therapyRules: {
+      requiredAny: ["advanced_cdk46", "adjuvant_cdk46"],
+      requiredAll: [],
+      prohibited: ["advanced_chemo", "trop2_topo1"],
+      timing: ["晚期ET+CDK4/6失败，或辅助CDK4/6治疗中/结束≤12个月复发", "辅助化疗至进展须>6个月", "CDK4/6不耐受早停有6个月补治疗算法"]
+    },
+    highlights: ["TROP2不是阳性入组门槛", "晚期阶段须化疗未治"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "pulmonary"),
+    doctorReview: ["是否已不能继续从内分泌获益", "是否适合方案允许的研究者选择化疗"],
+    evidencePages: "PDF p45-48"
+  },
+  {
+    ...operationalDefaults,
+    id: "S10",
+    protocolId: "TQB2930-III-01",
+    shortTitle: "TQB2930 + 化疗",
+    title: "TQB2930 联合化疗 III 期研究",
+    phase: "III期",
+    clinicalPosition: "HER2阳性，晚期既往≥2线抗HER2，即当前至少三线",
+    subtypes: ["her2_pos"],
+    stages: ["metastatic", "recurrent"],
+    settings: ["third_line_or_later", "anti_her2_pretreated", "later_line", "unknown"],
+    biomarkers: [],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: ["anti_her2_2plus"],
+      prohibited: ["last_line_pertuzumab"],
+      timing: ["既往须包含曲妥珠单抗类或伊尼妥单抗", "末次治疗中或结束后进展/不耐受", "末次方案不得含帕妥珠单抗"]
+    },
+    highlights: ["至少晚期三线窗口", "既往HER2 ADC允许并用于分层"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo"),
+    doctorReview: ["可接受研究者选择的四种化疗之一", "既往抗HER2相关LVEF变化"],
+    evidencePages: "PDF p38-44"
+  },
+  {
+    ...operationalDefaults,
+    id: "S11",
+    protocolId: "D7630C00001 / TROPION-Breast05",
+    shortTitle: "TROPION-Breast05",
+    title: "Dato-DXd 联合度伐利尤单抗 III 期研究",
+    phase: "III期",
+    clinicalPosition: "TNBC晚期一线；复发者DFI≥6个月；中心22C3 CPS≥10",
+    subtypes: ["tnbc"],
+    stages: ["metastatic", "recurrent", "locally_advanced"],
+    settings: ["first_line_tnbc", "advanced_untreated", "unknown"],
+    biomarkers: [
+      {
+        key: "pdl1",
+        label: "PD-L1 22C3",
+        expected: ["high"],
+        screeningPath: true,
+        note: "方案要求指定中心实验室 CPS≥10；未检测或当前结果不一致时仍列为中心检测/复核候选。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: [],
+      prohibited: ["advanced_chemo", "trop2_topo1"],
+      timing: ["晚期TNBC阶段系统治疗未治", "复发患者DFI≥6个月", "早期ICI允许但需核对免疫相关毒性"]
+    },
+    highlights: ["TROP2不是入组表达门槛", "早期PD-1/PD-L1治疗可在条件满足时允许"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "echo", "pulmonary", "pft"),
+    doctorReview: ["gBRCA患者PARP抑制剂是否为更优选择", "是否适合帕博利珠单抗和方案允许化疗"],
+    evidencePages: "PDF p70-81"
+  },
+  {
+    ...operationalDefaults,
+    id: "S12",
+    protocolId: "MK-2870-011-01 / TroFuse-011",
+    shortTitle: "TroFuse-011",
+    title: "Sacituzumab tirumotecan 一线 TNBC III 期研究",
+    phase: "III期",
+    clinicalPosition: "TNBC晚期一线；复发者DFI≥6个月；中心22C3 CPS<10",
+    subtypes: ["tnbc"],
+    stages: ["metastatic", "recurrent", "locally_advanced"],
+    settings: ["first_line_tnbc", "advanced_untreated", "unknown"],
+    biomarkers: [
+      {
+        key: "pdl1",
+        label: "PD-L1 22C3",
+        expected: ["low"],
+        screeningPath: true,
+        note: "方案要求中心 CPS<10；未检测或当前结果不一致时仍列为中心检测/复核候选。"
+      }
+    ],
+    therapyRules: {
+      requiredAny: [],
+      requiredAll: [],
+      prohibited: ["advanced_chemo", "trop2_topo1"],
+      timing: ["晚期TNBC阶段系统治疗未治", "复发患者早期根治治疗结束至复发≥6个月", "早期同类紫杉烷/铂类再次选择受6个月窗口限制"]
+    },
+    highlights: ["TROP2仅用于分层，无最低表达门槛", "既往早期分型可不同，但最新晚期样本须中心确认TNBC"],
+    screeningChecks: screeningChecks("pathology", "imaging", "labs", "ecg", "pulmonary"),
+    doctorReview: ["SP142 IC≥1%且阿替利珠单抗可及/适用时的排除判断", "已知gBRCA且PARPi可及时的替代治疗判断", "首诊转移是否符合患者最佳利益"],
+    evidencePages: "PDF p70-83"
+  }
+];
+
+const studySchema = {
+  version: "3.1",
+  principle: "rank_the_best_pathway_matches_and_keep_same_subtype_candidates_expandable",
+  resultStates: ["priority", "testing", "review", "conflict"],
+  biomarkerStates: {
+    genomic: ["positive", "negative", "unknown"],
+    pdl1: ["high", "low", "unknown"],
+    her2Expression: ["ihc0", "ihc1", "ihc2_ish_neg", "ihc2_ish_pos", "ihc3", "unknown"]
+  },
+  note: "HER2低表达仅指IHC 1+或IHC 2+/ISH−，不是独立于HR状态的主分型；首页仅显示最相关研究。"
+};
+
+
+const biomarkerStateLabels = {
+  positive: "已检出阳性",
+  negative: "当前未检出",
+  high: "CPS ≥10",
+  low: "CPS <10",
+  ihc0: "HER2 IHC 0",
+  ihc1: "HER2 IHC 1+（低表达）",
+  ihc2_ish_neg: "HER2 IHC 2+/ISH−（低表达）",
+  ihc2_ish_pos: "HER2 IHC 2+/ISH+（阳性）",
+  ihc3: "HER2 IHC 3+（阳性）",
+  unknown: "未检测/不清楚"
+};
+
+const subtypeLabels = {
+  hr_pos_her2_neg: "HR+/HER2−",
+  her2_pos: "HER2阳性",
+  tnbc: "三阴性乳腺癌"
+};
+
+const hrStatusLabels = {
+  positive: "HR阳性",
+  negative: "HR阴性",
+  unknown: "HR待明确"
+};
+
+const stageLabels = {
+  locally_advanced: "不可切除局部晚期",
+  metastatic: "转移性",
+  recurrent: "早期治疗后复发",
+  early: "早期根治性治疗阶段"
+};
+
+const settingLabels = {
+  advanced_untreated: "晚期系统治疗未治",
+  adjuvant_early_recurrence: "辅助治疗中或结束后较早复发",
+  post_endocrine: "晚期内分泌治疗后",
+  first_advanced_chemo: "准备进入晚期一线化疗",
+  post_induction_maintenance: "抗HER2诱导后维持",
+  anti_her2_pretreated: "晚期抗HER2经治",
+  third_line_or_later: "HER2阳性晚期三线及以后",
+  post_standard: "标准治疗后/早期开发队列",
+  early: "早期治疗阶段",
+  unknown: "当前治疗节点待明确"
+};
+
+const therapyLabels = {
+  adjuvant_endocrine: "辅助内分泌治疗",
+  advanced_endocrine: "晚期内分泌治疗",
+  adjuvant_cdk46: "辅助阶段CDK4/6抑制剂",
+  advanced_cdk46: "晚期阶段CDK4/6抑制剂",
+  advanced_chemo: "晚期阶段化疗",
+  advanced_anti_her2: "晚期抗HER2治疗",
+  anti_her2_2plus: "晚期≥2线抗HER2治疗",
+  last_line_pertuzumab: "末次方案含帕妥珠单抗",
+  fulvestrant: "既往氟维司群",
+  novel_serd: "既往新型SERD/ER靶向药",
+  pi3k_akt_mtor: "既往PI3K/AKT/mTOR抑制剂",
+  trop2_topo1: "既往TROP2或Topo-I相关ADC/治疗",
+  selective_parp1: "既往选择性PARP1抑制剂"
+};
+
+const isUnknown = (value) => value === null || value === undefined || value === "unknown";
+
+function deriveSubtype(hrStatus, her2Status) {
+  if (["ihc2_ish_pos", "ihc3"].includes(her2Status)) return "her2_pos";
+  if (["ihc0", "ihc1", "ihc2_ish_neg"].includes(her2Status)) {
+    if (hrStatus === "positive") return "hr_pos_her2_neg";
+    if (hrStatus === "negative") return "tnbc";
+  }
+  return "unknown";
+}
+
+function evaluateBiomarker(patient, rule) {
+  if (rule.appliesToSubtypes && !rule.appliesToSubtypes.includes(patient.subtype)) {
+    return { score: 0, matched: [], testing: [], conflicts: [] };
+  }
+
+  const value = patient.biomarkers?.[rule.key] || "unknown";
+  const stateLabel = biomarkerStateLabels[value] || value;
+
+  if (rule.expected.includes(value)) {
+    return {
+      score: 3,
+      matched: [`${rule.label}：当前结果与该研究方向一致（${stateLabel}）`],
+      testing: [],
+      conflicts: []
+    };
+  }
+
+  if (rule.cohortSpecific || rule.screeningPath) {
+    const prefix = isUnknown(value)
+      ? `${rule.label}尚未检测或结果不清楚`
+      : `${rule.label}当前记录为“${stateLabel}”`;
+    return {
+      score: isUnknown(value) ? 0 : -1,
+      matched: [],
+      testing: [{
+        label: `${rule.label}检测 / 中心复核`,
+        detail: `${prefix}；不因此提前移除研究。${rule.note}`,
+        priority: "biomarker"
+      }],
+      conflicts: []
+    };
+  }
+
+  return {
+    score: -2,
+    matched: [],
+    testing: [],
+    conflicts: [`${rule.label}当前结果与方案方向不一致，需研究团队确认是否存在复核路径`]
+  };
+}
+
+function evaluateTherapyHistory(patient, study) {
+  const therapies = new Set(patient.priorTherapies || []);
+  const rules = study.therapyRules || {};
+  const matched = [];
+  const missingHistory = [];
+  const conflicts = [];
+  let score = 0;
+
+  for (const item of rules.requiredAll || []) {
+    if (therapies.has(item)) {
+      matched.push(`已记录：${therapyLabels[item] || item}`);
+      score += 2;
+    } else {
+      missingHistory.push(`需确认是否满足：${therapyLabels[item] || item}`);
+    }
+  }
+
+  if ((rules.requiredAny || []).length) {
+    const hit = rules.requiredAny.filter((item) => therapies.has(item));
+    if (hit.length) {
+      matched.push(`既往治疗路径已记录：${hit.map((item) => therapyLabels[item] || item).join("、")}`);
+      score += 2;
+    } else {
+      missingHistory.push(`至少需核对一项：${rules.requiredAny.map((item) => therapyLabels[item] || item).join(" / ")}`);
+    }
+  }
+
+  for (const item of rules.prohibited || []) {
+    if (therapies.has(item)) {
+      conflicts.push(`已记录“${therapyLabels[item] || item}”，可能触及方案限制`);
+    }
+  }
+
+  return { matched, missingHistory, conflicts, score };
+}
+
+function evaluateScreeningChecks(patient, study) {
+  const available = new Set(patient.readiness || []);
+  const matched = [];
+  const missingChecks = [];
+
+  for (const check of study.screeningChecks || []) {
+    if (available.has(check.key)) {
+      matched.push(`已有${check.label}资料，仍需核对报告时效与方案阈值`);
+    } else {
+      missingChecks.push({ ...check, priority: "screening" });
+    }
+  }
+
+  return { matched, missingChecks };
+}
+
+function evaluateStudy(patient, study) {
+  const matched = [];
+  const testing = [];
+  const missingHistory = [];
+  const conflicts = [];
+  let score = 0;
+
+  const subtypeRelevant = study.subtypes.includes(patient.subtype);
+  if (subtypeRelevant) {
+    matched.push(`分型：${subtypeLabels[patient.subtype] || patient.subtype}`);
+    const pathologyParts = [];
+    if (patient.hrStatus) pathologyParts.push(hrStatusLabels[patient.hrStatus] || patient.hrStatus);
+    if (patient.her2Status) pathologyParts.push(biomarkerStateLabels[patient.her2Status] || patient.her2Status);
+    if (pathologyParts.length) matched.push(`病理记录：${pathologyParts.join("；")}`);
+    score += 10;
+  } else if (isUnknown(patient.subtype)) {
+    missingHistory.push("分子分型尚未明确");
+  } else {
+    conflicts.push("当前分子分型不属于该研究主要人群");
+    score -= 12;
+  }
+
+  const stageRelevant = study.stages.includes(patient.stage);
+  if (stageRelevant) {
+    matched.push(`阶段：${stageLabels[patient.stage] || patient.stage}`);
+    score += 5;
+  } else if (isUnknown(patient.stage)) {
+    missingHistory.push("疾病阶段尚未明确");
+  } else {
+    conflicts.push("当前疾病阶段与研究主要人群不同");
+    score -= 8;
+  }
+
+  const pathwayFit = study.settings.includes(patient.setting);
+  if (pathwayFit && !isUnknown(patient.setting)) {
+    matched.push(`治疗节点：${settingLabels[patient.setting] || patient.setting}`);
+    score += 7;
+  } else if (isUnknown(patient.setting)) {
+    missingHistory.push("当前治疗节点尚未明确");
+  } else {
+    conflicts.push(`当前治疗节点“${settingLabels[patient.setting] || patient.setting}”与研究主要路径不同`);
+    score -= 5;
+  }
+
+  for (const rule of study.biomarkers || []) {
+    const result = evaluateBiomarker(patient, rule);
+    score += result.score;
+    matched.push(...result.matched);
+    testing.push(...result.testing);
+    conflicts.push(...result.conflicts);
+  }
+
+  const therapy = evaluateTherapyHistory(patient, study);
+  score += therapy.score;
+  matched.push(...therapy.matched);
+  missingHistory.push(...therapy.missingHistory);
+  conflicts.push(...therapy.conflicts);
+
+  const checks = evaluateScreeningChecks(patient, study);
+  matched.push(...checks.matched);
+
+  const relevant = subtypeRelevant && stageRelevant;
+  const hardConflict = conflicts.some((item) => item.includes("可能触及方案限制"));
+
+  let status = "priority";
+  if (!pathwayFit || hardConflict) status = "conflict";
+  else if (testing.length) status = "testing";
+  else if (missingHistory.length) status = "review";
+
+  return {
+    study,
+    status,
+    score,
+    relevant,
+    pathwayFit,
+    hardConflict,
+    matched,
+    testing,
+    missingHistory,
+    missingChecks: checks.missingChecks,
+    conflicts,
+    doctorReview: study.doctorReview || []
+  };
+}
+
+function screenPatient(patient, studies) {
+  const order = { priority: 0, testing: 1, review: 2, conflict: 3 };
+  return studies
+    .filter((study) => study.recruitmentStatus === "recruiting")
+    .map((study) => evaluateStudy(patient, study))
+    .sort((a, b) => order[a.status] - order[b.status] || b.score - a.score || a.study.id.localeCompare(b.study.id));
+}
+
+function getRecommendations(patient, studies, limit = 3) {
+  const all = screenPatient(patient, studies);
+  const relevant = all.filter((result) => result.relevant);
+  const preferred = relevant.filter((result) => result.pathwayFit && !result.hardConflict);
+  const top = preferred.slice(0, limit);
+  const topIds = new Set(top.map((result) => result.study.id));
+  const others = relevant.filter((result) => !topIds.has(result.study.id));
+
+  return {
+    top,
+    others,
+    hiddenUnrelated: all.length - relevant.length,
+    relevantCount: relevant.length
+  };
+}
+
+function summarizeResults(results) {
+  return results.reduce(
+    (summary, result) => ({ ...summary, [result.status]: summary[result.status] + 1 }),
+    { priority: 0, testing: 0, review: 0, conflict: 0 }
+  );
+}
+
+
+
+
+const hrStatusOptions = [
+  ["positive", "HR阳性", "ER和/或PR阳性"],
+  ["negative", "HR阴性", "ER和PR均阴性"],
+  ["unknown", "待明确", "报告缺失、结果冲突或尚未复核"]
+];
+
+const her2StatusOptions = [
+  ["ihc0", "HER2 IHC 0", "传统HER2阴性；不属于HER2低表达"],
+  ["ihc1", "HER2 IHC 1+", "HER2低表达"],
+  ["ihc2_ish_neg", "HER2 IHC 2+ / ISH−", "HER2低表达；ISH包括FISH等原位杂交检测"],
+  ["ihc2_ish_pos", "HER2 IHC 2+ / ISH+", "HER2阳性；ISH包括FISH等原位杂交检测"],
+  ["ihc3", "HER2 IHC 3+", "HER2阳性"],
+  ["unknown", "待明确", "IHC或ISH/FISH结果缺失、冲突或尚未复核"]
+];
+
+const subtypeLabelMap = {
+  hr_pos_her2_neg: "HR+ / HER2−",
+  her2_pos: "HER2阳性",
+  tnbc: "三阴性乳腺癌",
+  unknown: "治疗分型待明确"
+};
+
+const hrStatusLabelMap = Object.fromEntries(hrStatusOptions.map(([value, label]) => [value, label]));
+const her2StatusLabelMap = Object.fromEntries(her2StatusOptions.map(([value, label]) => [value, label]));
+
+const pathwayOptions = {
+  hr_pos_her2_neg: [
+    ["hr_de_novo_untreated", "首诊晚期，尚未开始系统治疗", "当前准备制定晚期一线方案"],
+    ["hr_recurrence_early", "辅助内分泌中或结束后≤12个月复发", "早期内分泌耐药路径"],
+    ["hr_recurrence_late_untreated", "辅助内分泌结束>12个月复发，晚期未治", "晚期一线内分泌敏感路径"],
+    ["hr_post_endocrine", "晚期内分泌治疗后进展", "需进一步核对内分泌线数、CDK4/6及停药原因"],
+    ["hr_first_chemo", "已不能继续从内分泌获益，拟进入晚期一线化疗", "是否仍有内分泌获益只能由医生判断"],
+    ["hr_post_standard", "多线标准治疗后 / 早期开发队列", "需逐项核对既往药物与线数"],
+    ["hr_early", "仍处于早期根治性治疗阶段", "当前研究库以晚期研究为主"],
+    ["unknown", "治疗节点待明确", "尚未完成治疗时间线梳理"]
+  ],
+  her2_pos: [
+    ["her2_de_novo_untreated", "首诊晚期，尚未开始抗HER2系统治疗", "晚期一线未治路径"],
+    ["her2_recurrent_untreated", "早期治疗后复发，晚期尚未系统治疗", "需核对早期治疗结束至复发间隔"],
+    ["her2_maintenance", "一线抗HER2联合化疗诱导后、未进展", "拟进入维持治疗窗口"],
+    ["her2_pretreated", "晚期抗HER2治疗后进展", "需核对既往方案、线数和末次用药"],
+    ["her2_third_line", "晚期已接受≥2线抗HER2治疗", "当前至少进入晚期三线"],
+    ["her2_post_standard", "多线标准治疗后 / 早期开发队列", "需核对HER2 ADC等既往暴露"],
+    ["her2_early", "仍处于早期根治性治疗阶段", "当前研究库以晚期研究为主"],
+    ["unknown", "治疗节点待明确", "尚未完成抗HER2治疗时间线梳理"]
+  ],
+  tnbc: [
+    ["tnbc_de_novo_untreated", "首诊晚期，尚未接受晚期系统治疗", "晚期一线路径"],
+    ["tnbc_recurrent_ge6", "早期治疗结束≥6个月后复发，晚期未治", "可能进入晚期一线研究窗口"],
+    ["tnbc_recurrent_lt6", "早期治疗结束<6个月复发", "与部分晚期一线研究时间窗可能冲突"],
+    ["tnbc_post_standard", "晚期系统治疗后 / 早期开发队列", "需核对ADC、免疫和化疗暴露"],
+    ["tnbc_early", "仍处于早期根治性治疗阶段", "当前研究库以晚期研究为主"],
+    ["unknown", "治疗节点待明确", "尚未完成治疗时间线梳理"]
+  ],
+  unknown: [["unknown", "先完成病理与治疗阶段核对", "暂不进入具体分型路径"]]
+};
+
+const pathwayMeta = {
+  hr_de_novo_untreated: ["metastatic", "advanced_untreated"],
+  hr_recurrence_early: ["recurrent", "adjuvant_early_recurrence"],
+  hr_recurrence_late_untreated: ["recurrent", "advanced_untreated"],
+  hr_post_endocrine: ["metastatic", "post_endocrine"],
+  hr_first_chemo: ["metastatic", "first_advanced_chemo"],
+  hr_post_standard: ["metastatic", "post_standard"],
+  hr_early: ["early", "early"],
+  her2_de_novo_untreated: ["metastatic", "advanced_untreated"],
+  her2_recurrent_untreated: ["recurrent", "advanced_untreated"],
+  her2_maintenance: ["metastatic", "post_induction_maintenance"],
+  her2_pretreated: ["metastatic", "anti_her2_pretreated"],
+  her2_third_line: ["metastatic", "third_line_or_later"],
+  her2_post_standard: ["metastatic", "post_standard"],
+  her2_early: ["early", "early"],
+  tnbc_de_novo_untreated: ["metastatic", "advanced_untreated"],
+  tnbc_recurrent_ge6: ["recurrent", "advanced_untreated"],
+  tnbc_recurrent_lt6: ["recurrent", "post_standard"],
+  tnbc_post_standard: ["metastatic", "post_standard"],
+  tnbc_early: ["early", "early"],
+  unknown: ["unknown", "unknown"]
+};
+
+const therapyOptions = {
+  hr_pos_her2_neg: [
+    ["adjuvant_endocrine", "辅助内分泌治疗", "需结合开始、结束和复发日期"],
+    ["advanced_endocrine", "晚期内分泌治疗", "需记录具体药物、疗效和停药原因"],
+    ["adjuvant_cdk46", "辅助阶段 CDK4/6", "必须与晚期阶段暴露分开"],
+    ["advanced_cdk46", "晚期阶段 CDK4/6", "联合骨架和进展时间影响多个研究"],
+    ["advanced_chemo", "晚期阶段化疗", "不含单纯早期辅助化疗"],
+    ["fulvestrant", "既往氟维司群", "部分研究允许、部分明确限制"],
+    ["novel_serd", "新型 SERD / ER 靶向药", "包括试验用SERD、PROTAC等"],
+    ["pi3k_akt_mtor", "PI3K / AKT / mTOR 抑制剂", "部分研究有既往暴露限制"],
+    ["trop2_topo1", "TROP2 / Topo-I 相关ADC或治疗", "影响多项ADC研究"],
+    ["selective_parp1", "选择性 PARP1 抑制剂", "与泛PARP抑制剂分开记录"],
+    ["none", "以上均无 / 尚未整理", "可继续预筛，但会增加病史待核对项"]
+  ],
+  her2_pos: [
+    ["advanced_anti_her2", "晚期阶段≥1线抗HER2治疗", "需记录具体方案和进展日期"],
+    ["anti_her2_2plus", "晚期阶段≥2线抗HER2治疗", "对应至少晚期三线窗口"],
+    ["last_line_pertuzumab", "末次方案含帕妥珠单抗", "与历史上曾经使用不同"],
+    ["advanced_chemo", "晚期阶段化疗", "需与诱导治疗和维持阶段区分"],
+    ["trop2_topo1", "既往HER2 ADC / Topo-I相关ADC", "部分研究允许并分层，部分需复核肺毒性"],
+    ["none", "以上均无 / 尚未整理", "可继续预筛，但会增加病史待核对项"]
+  ],
+  tnbc: [
+    ["advanced_chemo", "晚期阶段化疗", "一线研究通常要求晚期系统治疗未治"],
+    ["trop2_topo1", "TROP2 / Topo-I 相关ADC或治疗", "多项TNBC研究有明确限制"],
+    ["selective_parp1", "选择性 PARP1 抑制剂", "早期开发研究需单独核对"],
+    ["none", "以上均无 / 尚未整理", "可继续预筛，但会增加病史待核对项"]
+  ],
+  unknown: [["none", "治疗史待整理", "先保留为未知"]]
+};
+
+const biomarkerDefinitions = {
+  pik3ca: {
+    key: "pik3ca",
+    label: "PIK3CA",
+    hint: "仅在HR+/HER2−且当前治疗节点可能用到PI3K通路方案时询问",
+    options: [["positive", "已检出"], ["negative", "当前未检出"], ["unknown", "未检测/不清楚"]]
+  },
+  esr1: {
+    key: "esr1",
+    label: "ESR1",
+    hint: "通常在晚期内分泌治疗进展后，用于SERD相关路径",
+    options: [["positive", "已检出"], ["negative", "当前未检出"], ["unknown", "未检测/不清楚"]]
+  },
+  brcaHrd: {
+    key: "brcaHrd",
+    label: "gBRCA / BRCA-HRD",
+    hint: "HER2阴性晚期患者在PARP或相关研究路径中按需检测",
+    options: [["positive", "已检出"], ["negative", "当前未检出"], ["unknown", "未检测/不清楚"]]
+  },
+  pdl1: {
+    key: "pdl1",
+    label: "PD-L1 22C3",
+    hint: "TNBC晚期一线免疫相关研究按中心CPS分层",
+    options: [["high", "CPS ≥10"], ["low", "CPS <10"], ["unknown", "未检测/不清楚"]]
+  }
+};
+
+const readinessOptions = [
+  ["pathology", "最新病理与分型材料", "已有报告及可供中心复核的切片/蜡块信息"],
+  ["imaging", "近期基线肿瘤影像", "可用于分期及靶病灶评估"],
+  ["labs", "近期血液与器官功能检查", "血常规、肝肾功能、电解质、凝血等"],
+  ["ecg", "12导联心电图 / QTc", "部分方案需要连续多次测量"],
+  ["echo", "心脏超声或MUGA / LVEF", "心功能要求因研究而异"],
+  ["pulmonary", "肺部安全性资料", "ILD/肺炎史、胸部影像与静息SpO2"],
+  ["pft", "肺功能PFT / DLCO（如已做）", "只在具体方案或肺病史提示时作为补充检查"],
+  ["glucose", "空腹血糖与HbA1c", "PI3K通路研究重点核对"],
+  ["none", "以上资料尚未整理", "结果会逐项列出建议补充内容"]
+];
+
+const pathLabelMap = Object.fromEntries(
+  Object.values(pathwayOptions).flat().map(([value, label]) => [value, label])
+);
+const therapyLabelMap = Object.fromEntries(
+  Object.values(therapyOptions).flat().map(([value, label]) => [value, label])
+);
+const readinessLabelMap = Object.fromEntries(readinessOptions.map(([value, label]) => [value, label]));
+const biomarkerValueLabels = {
+  positive: "阳性",
+  negative: "当前未检出",
+  high: "CPS≥10",
+  low: "CPS<10",
+  ihc0: "HER2 IHC 0",
+  ihc1: "HER2 IHC 1+（低表达）",
+  ihc2_ish_neg: "HER2 IHC 2+/ISH−（低表达）",
+  ihc2_ish_pos: "HER2 IHC 2+/ISH+（阳性）",
+  ihc3: "HER2 IHC 3+（阳性）",
+  unknown: "未检测/不清楚"
+};
+
+const initialPatient = () => ({
+  hrStatus: null,
+  her2Status: null,
+  subtype: null,
+  pathway: null,
+  stage: null,
+  setting: null,
+  biomarkers: {
+    pik3ca: "unknown",
+    esr1: "unknown",
+    brcaHrd: "unknown",
+    pdl1: "unknown",
+    her2Expression: "unknown"
+  },
+  priorTherapies: [],
+  readiness: []
+});
+
+const state = {
+  currentStep: 0,
+  patient: initialPatient(),
+  completed: false
+};
+
+const el = (id) => document.getElementById(id);
+const questionWrap = el("questionWrap");
+const nextButton = el("nextButton");
+const backButton = el("backButton");
+
+function getBiomarkerRows() {
+  const { subtype, setting } = state.patient;
+  if (subtype === "hr_pos_her2_neg") {
+    if (setting === "advanced_untreated") return [biomarkerDefinitions.pik3ca];
+    if (["adjuvant_early_recurrence", "post_endocrine"].includes(setting)) {
+      return [biomarkerDefinitions.pik3ca, biomarkerDefinitions.esr1];
+    }
+    if (setting === "first_advanced_chemo") return [biomarkerDefinitions.brcaHrd];
+    if (setting === "post_standard") return [biomarkerDefinitions.brcaHrd];
+  }
+  if (subtype === "tnbc") {
+    if (setting === "advanced_untreated") return [biomarkerDefinitions.pdl1, biomarkerDefinitions.brcaHrd];
+    if (setting === "post_standard") return [biomarkerDefinitions.brcaHrd];
+  }
+  return [];
+}
+
+function getSteps() {
+  const subtype = state.patient.subtype || "unknown";
+  return [
+    {
+      id: "pathology",
+      navTitle: "病理分型",
+      navHint: "HR状态 + HER2五档",
+      title: "患者最新病理的HR与HER2结果是？",
+      description: "分别选择HR状态和HER2原始检测结果，系统会自动推导治疗分型。HER2低表达仅指IHC 1+或IHC 2+/ISH−。",
+      type: "pathology"
+    },
+    {
+      id: "pathway",
+      navTitle: "临床节点",
+      navHint: subtypeLabelMap[subtype] || "分型后分流",
+      title: subtype === "unknown" ? "先明确病理和疾病阶段" : `${subtypeLabelMap[subtype]}患者目前处于哪个临床节点？`,
+      description: "选项已按当前分型分流；时间窗用于研究排序，最终仍需用治疗起止日期核实。",
+      type: "single",
+      options: pathwayOptions[subtype] || pathwayOptions.unknown
+    },
+    {
+      id: "priorTherapies",
+      navTitle: "既往治疗",
+      navHint: "仅显示当前分型相关项",
+      title: `${subtypeLabelMap[subtype] || "当前分型"}需要核对哪些既往治疗？`,
+      description: "可多选。阶段、联合骨架、进展日期和停药原因仍需在结果页逐项核对。",
+      type: "multi",
+      options: therapyOptions[subtype] || therapyOptions.unknown
+    },
+    {
+      id: "biomarkers",
+      navTitle: "按需检测",
+      navHint: "只问当前路径会用到的标志物",
+      title: "当前治疗节点需要哪些分子检测信息？",
+      description: "这里不是固定基因套餐。只展示可能改变当前研究路径的标志物；未检出或未检测仍可保留中心检测候选。",
+      type: "matrix",
+      rows: getBiomarkerRows()
+    },
+    {
+      id: "readiness",
+      navTitle: "现有检查",
+      navHint: "识别还缺哪些资料",
+      title: "目前已经有哪些可用于筛查的检查资料？",
+      description: "可多选已有项目。结果页会按每项研究分别列出缺少的病理、心功能、肺部或实验室检查。",
+      type: "multi",
+      options: readinessOptions
+    }
+  ];
+}
+
+function applyPathway(value) {
+  const [stage, setting] = pathwayMeta[value] || ["unknown", "unknown"];
+  state.patient.stage = stage;
+  state.patient.setting = setting;
+}
+
+function renderStepper() {
+  const steps = getSteps();
+  el("stepFraction").textContent = `${state.currentStep + 1} / ${steps.length}`;
+  el("progressBar").style.width = `${((state.currentStep + 1) / steps.length) * 100}%`;
+  el("stepNav").innerHTML = steps.map((step, index) => {
+    const value = state.patient[step.id];
+    const selected = step.type === "pathology"
+      ? state.patient.hrStatus && state.patient.her2Status
+      : step.type === "multi" ? value?.length : step.type === "matrix" ? false : value;
+    const status = index === state.currentStep ? "active" : (index < state.currentStep || selected) ? "done" : "";
+    const dot = status === "done" ? "✓" : String(index + 1).padStart(2, "0");
+    return `<div class="step-item ${status}"><span class="step-dot">${dot}</span><span class="step-copy"><strong>${step.navTitle}</strong><small>${step.navHint}</small></span></div>`;
+  }).join("");
+}
+
+function isSelected(step, value) {
+  return step.type === "multi" ? state.patient[step.id].includes(value) : state.patient[step.id] === value;
+}
+
+function renderMatrix(rows) {
+  if (!rows.length) {
+    return `<div class="path-note"><strong>当前节点不需要额外固定分子标志物问题</strong><p>系统将直接依据分型、治疗阶段和既往用药推荐研究；具体研究如需中心复核，会在结果卡中单独提示。</p></div>`;
+  }
+  return `<div class="biomarker-matrix">
+    ${rows.map((row) => `
+      <div class="biomarker-row">
+        <div class="biomarker-name"><strong>${row.label}</strong><small>${row.hint}</small></div>
+        <div class="segment-group" role="group" aria-label="${row.label}检测状态">
+          ${row.options.map(([value, label]) => `
+            <button class="segment ${state.patient.biomarkers[row.key] === value ? "selected" : ""}" type="button" data-biomarker="${row.key}" data-value="${value}" aria-pressed="${state.patient.biomarkers[row.key] === value}">${label}</button>
+          `).join("")}
+        </div>
+      </div>
+    `).join("")}
+    <p class="matrix-note">未检测、结果不清楚或当前未检出，不等于网页判定不能参加；有方案检测/中心复核路径的研究仍会保留。</p>
+  </div>`;
+}
+
+function renderPathologyChoices() {
+  const renderGroup = (title, hint, field, options) => `
+    <section class="pathology-group" aria-labelledby="${field}Title">
+      <div class="pathology-group-head">
+        <strong id="${field}Title">${title}</strong>
+        <small>${hint}</small>
+      </div>
+      <div class="choice-grid pathology-options ${field === "her2Status" ? "her2-options" : ""}">
+        ${options.map(([value, label, optionHint]) => `
+          <button class="choice-card ${state.patient[field] === value ? "selected" : ""}" type="button" data-pathology-field="${field}" data-value="${value}" aria-pressed="${state.patient[field] === value}">
+            <span class="choice-control"></span>
+            <span class="choice-copy"><strong>${label}</strong><small>${optionHint}</small></span>
+          </button>
+        `).join("")}
+      </div>
+    </section>`;
+
+  const derived = state.patient.hrStatus && state.patient.her2Status
+    ? subtypeLabelMap[state.patient.subtype]
+    : "完成两项后自动生成";
+
+  return `<div class="pathology-selector">
+    ${renderGroup("HR状态", "依据ER和PR结果", "hrStatus", hrStatusOptions)}
+    ${renderGroup("HER2表达", "按IHC及必要时ISH/FISH结果精确选择", "her2Status", her2StatusOptions)}
+    <div class="derived-subtype"><span>自动推导治疗分型</span><strong>${derived}</strong></div>
+  </div>`;
+}
+
+function renderQuestion() {
+  const steps = getSteps();
+  const step = steps[state.currentStep];
+  const controls = step.type === "pathology"
+    ? renderPathologyChoices()
+    : step.type === "matrix"
+      ? renderMatrix(step.rows)
+      : `<div class="choice-grid ${step.type === "multi" ? "multi" : ""}">
+        ${step.options.map(([value, label, hint]) => `
+          <button class="choice-card ${isSelected(step, value) ? "selected" : ""}" type="button" data-value="${value}" aria-pressed="${isSelected(step, value)}">
+            <span class="choice-control"></span>
+            <span class="choice-copy"><strong>${label}</strong><small>${hint}</small></span>
+          </button>
+        `).join("")}
+      </div>`;
+
+  questionWrap.innerHTML = `
+    <span class="question-number">STEP ${String(state.currentStep + 1).padStart(2, "0")}</span>
+    <h2>${step.title}</h2>
+    <p class="question-desc">${step.description}</p>
+    ${controls}`;
+
+  questionWrap.querySelectorAll(".choice-card").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button.dataset.pathologyField) {
+        selectPathology(button.dataset.pathologyField, button.dataset.value);
+      } else {
+        selectOption(step, button.dataset.value);
+      }
+    });
+  });
+  questionWrap.querySelectorAll(".segment").forEach((button) => {
+    button.addEventListener("click", () => selectBiomarker(button.dataset.biomarker, button.dataset.value));
+  });
+
+  nextButton.querySelector("span").textContent = state.currentStep === steps.length - 1 ? "生成优先推荐" : "继续";
+  backButton.disabled = state.currentStep === 0;
+}
+
+function selectPathology(field, value) {
+  const hrStatus = field === "hrStatus" ? value : state.patient.hrStatus;
+  const her2Status = field === "her2Status" ? value : state.patient.her2Status;
+  const fresh = initialPatient();
+  fresh.hrStatus = hrStatus;
+  fresh.her2Status = her2Status;
+  fresh.subtype = deriveSubtype(hrStatus, her2Status);
+  fresh.biomarkers.her2Expression = her2Status || "unknown";
+  state.patient = fresh;
+  state.currentStep = 0;
+  state.completed = false;
+  persist();
+  renderAll();
+}
+
+function selectOption(step, value) {
+  if (step.type === "single") {
+    state.patient[step.id] = value;
+    if (step.id === "pathway") applyPathway(value);
+  } else {
+    const current = new Set(state.patient[step.id]);
+    if (value === "none") {
+      current.clear();
+      current.add("none");
+    } else {
+      current.delete("none");
+      current.has(value) ? current.delete(value) : current.add(value);
+    }
+    state.patient[step.id] = [...current];
+  }
+  state.completed = false;
+  persist();
+  renderAll();
+}
+
+function selectBiomarker(key, value) {
+  state.patient.biomarkers[key] = value;
+  state.completed = false;
+  persist();
+  renderAll();
+}
+
+function valueLabel(step) {
+  if (step.id === "pathology") {
+    if (!state.patient.hrStatus || !state.patient.her2Status) return null;
+    return `${hrStatusLabelMap[state.patient.hrStatus]}；${her2StatusLabelMap[state.patient.her2Status]} → ${subtypeLabelMap[state.patient.subtype]}`;
+  }
+  if (step.id === "pathway") return pathLabelMap[state.patient.pathway] || null;
+  if (step.id === "priorTherapies") {
+    return state.patient.priorTherapies.length
+      ? state.patient.priorTherapies.map((item) => therapyLabelMap[item]).join("、")
+      : null;
+  }
+  if (step.id === "biomarkers") {
+    const informative = step.rows
+      .filter((row) => state.patient.biomarkers[row.key] !== "unknown")
+      .map((row) => `${row.label} ${biomarkerValueLabels[state.patient.biomarkers[row.key]]}`);
+    return step.rows.length ? (informative.join("、") || "相关检测均未完成") : "当前节点无需固定检测";
+  }
+  if (step.id === "readiness") {
+    return state.patient.readiness.length
+      ? state.patient.readiness.map((item) => readinessLabelMap[item]).join("、")
+      : null;
+  }
+  return null;
+}
+
+function renderSnapshot() {
+  el("snapshotContent").innerHTML = getSteps().map((step) => {
+    const label = valueLabel(step);
+    return `<div class="snapshot-row"><span>${step.navTitle}</span><strong class="${label ? "" : "empty"}">${label || "尚未选择"}</strong></div>`;
+  }).join("");
+}
+
+function renderAll() {
+  renderStepper();
+  renderQuestion();
+  renderSnapshot();
+  if (!state.completed) renderResults();
+}
+
+function canContinue() {
+  const step = getSteps()[state.currentStep];
+  if (step.type === "pathology") return Boolean(state.patient.hrStatus && state.patient.her2Status);
+  if (step.type === "matrix") return true;
+  const value = state.patient[step.id];
+  return step.type === "multi" ? value.length > 0 : Boolean(value);
+}
+
+function showValidation() {
+  questionWrap.animate(
+    [{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }],
+    { duration: 240 }
+  );
+  const desc = questionWrap.querySelector(".question-desc");
+  const original = desc.textContent;
+  desc.textContent = "请先选择一项，再继续。";
+  desc.style.color = "#a55454";
+  window.setTimeout(() => { desc.textContent = original; desc.style.color = ""; }, 1600);
+}
+
+function unique(items) {
+  return [...new Set(items.filter(Boolean))];
+}
+
+function renderTextList(items, fallback) {
+  const values = items.length ? items : [fallback];
+  return `<ul>${values.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+}
+
+function renderNextActions(result) {
+  const biomarkerActions = result.testing.map((item) => ({
+    type: "优先检测",
+    label: item.label,
+    detail: item.detail
+  }));
+  const historyActions = result.missingHistory.map((item) => ({
+    type: "病史核对",
+    label: item,
+    detail: "需要治疗事件日期、联合方案、最佳疗效及停药原因支持。"
+  }));
+  const checkActions = result.missingChecks.map((item) => ({
+    type: "筛查检查",
+    label: item.label,
+    detail: item.detail
+  }));
+  const actions = [...biomarkerActions, ...historyActions, ...checkActions];
+  if (!actions.length) return `<div class="action-empty">当前录入资料中未发现新的固定检查缺口；仍需研究团队按完整方案核验。</div>`;
+  return `<ol class="action-list">${actions.map((item, index) => `
+    <li>
+      <span class="action-index">${String(index + 1).padStart(2, "0")}</span>
+      <div><small>${item.type}</small><strong>${item.label}</strong><p>${item.detail}</p></div>
+    </li>
+  `).join("")}</ol>`;
+}
+
+function renderStudyCard(result, index, compact = false) {
+  const { study, status } = result;
+  const labels = {
+    priority: "优先推荐 · 资料较完整",
+    testing: "优先推荐 · 先补检测",
+    review: "优先推荐 · 先补病史",
+    conflict: "同分型候选 · 路径待核对"
+  };
+  const doctorItems = unique([
+    ...result.conflicts,
+    ...result.doctorReview,
+    ...(study.therapyRules?.timing || [])
+  ]);
+
+  if (compact) {
+    return `<article class="study-card compact">
+      <div class="status-rail ${status}"></div>
+      <div class="study-body">
+        <div class="study-top">
+          <div><span class="study-kicker">${study.phase} · ${study.id}</span><h3 class="study-title">${study.title}</h3><p class="study-meta">${study.clinicalPosition}</p></div>
+          <span class="status-pill ${status}">${labels[status]}</span>
+        </div>
+        ${result.conflicts.length ? `<div class="conflict-note"><strong>当前主要差异：</strong>${result.conflicts.join("；")}</div>` : ""}
+      </div>
+    </article>`;
+  }
+
+  return `<article class="study-card evidence-card">
+    <div class="status-rail ${status}"></div>
+    <div class="study-body">
+      <div class="study-top">
+        <div class="study-heading">
+          <span class="recommend-rank">推荐 ${String(index + 1).padStart(2, "0")}</span>
+          <div><span class="study-kicker">${study.phase} · ${study.id} · ${study.protocolId}</span><h3 class="study-title">${study.title}</h3><p class="study-meta">${study.clinicalPosition}</p></div>
+        </div>
+        <span class="status-pill ${status}">${labels[status]}</span>
+      </div>
+      <div class="evidence-counts">
+        <span><strong>${result.matched.length}</strong> 项已有依据</span>
+        <span><strong>${result.testing.length + result.missingHistory.length + result.missingChecks.length}</strong> 项待补充</span>
+        <span>最终由医生及研究团队判断</span>
+      </div>
+      <div class="study-grid evidence-grid">
+        <section class="criteria support"><h4>患者当前哪些条件相符</h4>${renderTextList(unique(result.matched), "当前资料不足，尚不能形成明确的匹配依据")}</section>
+        <section class="criteria verification"><h4>下一步还缺什么</h4>${renderNextActions(result)}</section>
+        <section class="criteria doctor"><h4>只能由医生 / 研究团队确认</h4>${renderTextList(doctorItems, "完整入排标准、动态安全性和医学监查要求")}</section>
+      </div>
+      <div class="rule-note"><strong>证据定位：</strong>${study.evidencePages}　<span>候选推荐不等于可入组。</span></div>
+    </div>
+  </article>`;
+}
+
+function renderResults() {
+  const resultStats = el("resultStats");
+  const resultFilters = el("resultFilters");
+  const resultList = el("resultList");
+  const otherCandidates = el("otherCandidates");
+
+  if (!state.completed) {
+    el("resultSummary").textContent = "完成上方分型路径后，首页只显示最相关的1-3项研究，并逐项列出缺失检查。";
+    resultStats.innerHTML = "";
+    resultFilters.innerHTML = "";
+    resultList.innerHTML = `<div class="empty-result path-empty"><strong>先完成患者路径</strong><span>系统不会在首页预先铺开12项研究。</span></div>`;
+    otherCandidates.innerHTML = "";
+    return;
+  }
+
+  const recommendation = getRecommendations(state.patient, studies, 3);
+  const totalGaps = recommendation.top.reduce(
+    (sum, item) => sum + item.testing.length + item.missingHistory.length + item.missingChecks.length,
+    0
+  );
+  const pathLabel = pathLabelMap[state.patient.pathway] || "治疗节点待明确";
+
+  el("resultSummary").textContent = recommendation.top.length
+    ? `已从12项在招研究中筛出 ${recommendation.top.length} 项优先讨论；同分型其他候选默认折叠。`
+    : "当前信息下没有形成同路径优先推荐，请先核对分期、治疗节点和既往用药。";
+  resultStats.innerHTML = `
+    <div class="stat candidate"><strong>${recommendation.top.length}</strong><span>首页优先推荐</span></div>
+    <div class="stat testing"><strong>${totalGaps}</strong><span>待补检测 / 资料</span></div>
+    <div class="stat review"><strong>${recommendation.others.length}</strong><span>同分型其他候选</span></div>`;
+  resultFilters.innerHTML = `
+    <span class="path-chip">${subtypeLabelMap[state.patient.subtype] || "分型待明确"}</span>
+    <span class="path-chip">${her2StatusLabelMap[state.patient.her2Status] || "HER2待明确"}</span>
+    <span class="path-chip">${pathLabel}</span>
+    <span class="path-chip muted">已隐藏 ${recommendation.hiddenUnrelated} 项不同分型/阶段研究</span>`;
+  resultList.innerHTML = recommendation.top.length
+    ? recommendation.top.map((item, index) => renderStudyCard(item, index)).join("")
+    : `<div class="empty-result"><strong>暂无同路径优先项</strong><span>这不是“不能入组”的结论，请返回修改患者条件或由研究团队人工检索。</span></div>`;
+
+  otherCandidates.innerHTML = recommendation.others.length
+    ? `<details class="other-candidates"><summary><span>查看同分型其他候选</span><strong>${recommendation.others.length} 项</strong><small>默认收起，避免干扰首页判断</small></summary><div class="other-list">${recommendation.others.map((item) => renderStudyCard(item, 0, true)).join("")}</div></details>`
+    : "";
+}
+
+function persist() {
+  try { sessionStorage.setItem("breastTrialPatientV4", JSON.stringify(state.patient)); } catch (_) {}
+}
+
+function restore() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("breastTrialPatientV4"));
+    if (saved) {
+      const fresh = initialPatient();
+      state.patient = {
+        ...fresh,
+        ...saved,
+        biomarkers: { ...fresh.biomarkers, ...(saved.biomarkers || {}) },
+        priorTherapies: saved.priorTherapies || [],
+        readiness: saved.readiness || []
+      };
+      state.patient.subtype = deriveSubtype(state.patient.hrStatus, state.patient.her2Status);
+      state.patient.biomarkers.her2Expression = state.patient.her2Status || "unknown";
+      if (state.patient.pathway) applyPathway(state.patient.pathway);
+    }
+  } catch (_) {}
+}
+
+function reset() {
+  state.currentStep = 0;
+  state.completed = false;
+  state.patient = initialPatient();
+  persist();
+  renderAll();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+nextButton.addEventListener("click", () => {
+  if (!canContinue()) return showValidation();
+  const steps = getSteps();
+  if (state.currentStep < steps.length - 1) {
+    state.currentStep += 1;
+    renderAll();
+  } else {
+    state.completed = true;
+    renderResults();
+    el("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+
+backButton.addEventListener("click", () => {
+  if (state.currentStep > 0) {
+    state.currentStep -= 1;
+    renderAll();
+  }
+});
+
+el("resetButton").addEventListener("click", reset);
+el("editButton").addEventListener("click", () => document.querySelector(".workspace").scrollIntoView({ behavior: "smooth", block: "start" }));
+el("demoButton").addEventListener("click", () => {
+  state.patient = {
+    ...initialPatient(),
+    hrStatus: "positive",
+    her2Status: "ihc0",
+    subtype: "hr_pos_her2_neg",
+    pathway: "hr_de_novo_untreated",
+    stage: "metastatic",
+    setting: "advanced_untreated",
+    biomarkers: { ...initialPatient().biomarkers, pik3ca: "negative", her2Expression: "ihc0" },
+    priorTherapies: ["adjuvant_endocrine"],
+    readiness: ["pathology", "imaging", "labs"]
+  };
+  state.currentStep = 4;
+  state.completed = false;
+  persist();
+  renderAll();
+});
+
+const helpDialog = el("helpDialog");
+el("helpButton").addEventListener("click", () => helpDialog.showModal());
+el("closeHelp").addEventListener("click", () => helpDialog.close());
+el("ackHelp").addEventListener("click", () => helpDialog.close());
+
+restore();
+renderAll();
+renderResults();
+
+    </script>
+  </body>
+</html>
